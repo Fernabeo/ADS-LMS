@@ -59,7 +59,7 @@ public class B_Sheduler {
                 if ((events[i].start > events[i + 1].start)||((events[i].start == events[i + 1].start)&&(events[i].stop > events[i + 1].stop))) {
                     q[0] = events[i];
                     events[i] = events[i + 1];
-                    events[i + 1] = q[0];
+                    events[i + 1]= q[0];
                     razr=false;
                     break;
                 }
