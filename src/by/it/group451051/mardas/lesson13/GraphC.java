@@ -3,63 +3,107 @@ package by.it.group451051.mardas.lesson13;
 import java.util.*;
 
 public class GraphC {
-    static Map<String, List<String>> adj = new TreeMap<>();
-    static Map<String, List<String>> rev = new TreeMap<>();
-    static List<String> order = new ArrayList<>();
-    static Set<String> visited = new HashSet<>();
-
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        if (!scanner.hasNextLine()) return;
-        String input = scanner.nextLine();
-
-        // Парсинг графа
-        String[] edges = input.split(", ");
-        for (String edge : edges) {
-            String[] parts = edge.split("->");
-            String from = parts[0].trim();
-            String to = parts[1].trim();
-
-            adj.computeIfAbsent(from, k -> new ArrayList<>()).add(to);
-            rev.computeIfAbsent(to, k -> new ArrayList<>()).add(from);
-            adj.putIfAbsent(to, new ArrayList<>());
-            rev.putIfAbsent(from, new ArrayList<>());
+    private static class Vertex {
+        public String label;
+        public boolean wasVisited;
+        public Vertex(String lab) {
+            label=lab;
+            wasVisited=false;
         }
+    }
+    private final int MAX_VERTS=100;
+    private Vertex[] vertexList;
+    private int[][] adjMat;
+    private int[][] revMat;
+    private int nVerts;
+    private String[] order;
+    private int orderIdx;
+    public GraphC() {
+        vertexList=new Vertex[MAX_VERTS];
+        adjMat=new int[MAX_VERTS][MAX_VERTS];
+        revMat=new int[MAX_VERTS][MAX_VERTS];
+        nVerts=0;
+        order=new String[MAX_VERTS];
+        orderIdx=0;
+    }
 
-        // 1. Прямой DFS для определения порядка завершения
-        for (String node : adj.keySet()) {
-            if (!visited.contains(node)) dfs1(node);
+    private int getIndex(String lab) {
+        for(int i=0;i<nVerts;i++)
+            if(vertexList[i].label.equals(lab)) return i;
+        return -1;
+    }
+
+    public void addVertex(String lab) {
+        if(getIndex(lab)==-1)
+            vertexList[nVerts++]=new Vertex(lab);
+    }
+
+    public void addEdge(String start,String end) {
+        int s=getIndex(start);
+        int e=getIndex(end);
+        if(s!=-1&&e!=-1) {
+            adjMat[s][e]=1;
+            revMat[e][s]=1;
         }
+    }
 
-        // 2. Обратный DFS по инвертированному графу
-        Collections.reverse(order);
-        visited.clear();
-        for (String node : order) {
-            if (!visited.contains(node)) {
-                PriorityQueue<String> component = new PriorityQueue<>();
-                dfs2(node, component);
+    private void sortVertices() {
+        for(int i=0;i<nVerts-1;i++)
+            for(int j=i+1;j<nVerts;j++)
+                if(vertexList[i].label.compareTo(vertexList[j].label)>0) {
+                    Vertex temp=vertexList[i];
+                    vertexList[i]=vertexList[j];
+                    vertexList[j]=temp;
+                }
+    }
 
-                // Вывод компонента в алфавитном порядке без пробелов
-                StringBuilder sb = new StringBuilder();
-                while (!component.isEmpty()) sb.append(component.poll());
-                System.out.println(sb);
+    private void dfs1(int v) {
+        vertexList[v].wasVisited=true;
+        for(int j=0;j<nVerts;j++)
+            if(adjMat[v][j]==1&&!vertexList[j].wasVisited)
+                dfs1(j);
+        order[orderIdx++]=vertexList[v].label;
+    }
+
+    private void dfs2(int v,PriorityQueue<String> component) {
+        vertexList[v].wasVisited=true;
+        component.add(vertexList[v].label);
+        for(int j=0;j<nVerts;j++)
+            if(revMat[v][j]==1&&!vertexList[j].wasVisited)
+                dfs2(j,component);
+    }
+
+    public void solve() {
+        for(int i=0;i<nVerts;i++)
+            if(!vertexList[i].wasVisited)dfs1(i);
+        for(int i=0;i<nVerts;i++)vertexList[i].wasVisited=false;
+        for(int i=orderIdx-1;i>=0;i--) {
+            int v=getIndex(order[i]);
+            if(!vertexList[v].wasVisited) {
+                PriorityQueue<String> component=new PriorityQueue<>();
+                dfs2(v,component);
+                while(!component.isEmpty())System.out.print(component.poll());
+                System.out.println();
             }
         }
     }
 
-    static void dfs1(String v) {
-        visited.add(v);
-        for (String neighbor : adj.get(v)) {
-            if (!visited.contains(neighbor)) dfs1(neighbor);
+    public static void main(String[] args) {
+        Scanner sc=new Scanner(System.in);
+        if(!sc.hasNextLine())return;
+        String input=sc.nextLine();
+        GraphC graph=new GraphC();
+        String[] edges=input.split(", ");
+        for(String edge:edges) {
+            String[] parts=edge.split("->");
+            graph.addVertex(parts[0].trim());
+            graph.addVertex(parts[1].trim());
         }
-        order.add(v);
-    }
-
-    static void dfs2(String v, PriorityQueue<String> component) {
-        visited.add(v);
-        component.add(v);
-        for (String neighbor : rev.get(v)) {
-            if (!visited.contains(neighbor)) dfs2(neighbor, component);
+        graph.sortVertices();
+        for(String edge:edges) {
+            String[] parts=edge.split("->");
+            graph.addEdge(parts[0].trim(),parts[1].trim());
         }
+        graph.solve();
     }
 }
