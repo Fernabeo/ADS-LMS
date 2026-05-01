@@ -167,16 +167,21 @@ public class A_Huffman {
                 }
             if (razr==false) break;
         }
+        String[] mas_kod=new String[kol+1];
+        for (int i=1;i<=kol;i++) {
+            mas_kod[i]="";
+            for (i2=1;i2<=i;i2++) {
+                if (i2<i) mas_kod[i] = mas_kod[i] + "1";
+                if ((i2 == i)&&(i2<kol)) mas_kod[i] = mas_kod[i] + "0";
+            }
+        }
         String kod="";
         for (i2=0;i2<s.length();i2++)
-            for (int i=1;i<=kol;i++) {
-                if (mas_char[i] == s.charAt(i2)) {
-                    for (int i3=1;i3<i;i3++)
-                        kod=kod+"1";
-                    if (i!=kol) kod=kod+"0";
-                    break;
-                }
-            }
+            for (int i=1;i<=kol;i++)
+                if (mas_char[i] == s.charAt(i2)) kod=kod+mas_kod[i];
+        System.out.println(kol+" "+kod.length());
+        for (int i=1;i<=kol;i++) System.out.println(mas_char[i]+": "+mas_kod[i]);
+        System.out.println(kod);
         return kod;
         //01001100100111
         //01001100100111
